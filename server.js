@@ -70,7 +70,7 @@ app.get("/get", function (req, res) {
         image = [];
         url = [];
       }
-    } catch {
+    } catch (error) {
       res.status(404).send("Link errato");
     }
   });
