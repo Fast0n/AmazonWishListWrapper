@@ -12,6 +12,19 @@ var title = [];
 var image = [];
 var url = [];
 
+var npid = require('npid');
+
+
+
+try {
+    var pid = npid.create('/tmp/AmazonWishListWrapper.pid');
+    pid.removeOnExit();
+} catch (err) {
+    console.log(err);
+    process.exit(1);
+}
+
+
 app.get("/", (req, res) => {
   res.status(200).send("Benvenuto in AmazonWishListWrapper!");
 });

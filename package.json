@@ -5,9 +5,10 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
     "express": "^4.17.1",
-    "request": "^2.88.2",
-    "cheerio": "^0.22.0"
+    "npid": "^0.4.0",
+    "request": "^2.88.2"
   },
   "engines": {
     "node": "9.x"
