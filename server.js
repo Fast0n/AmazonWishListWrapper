@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const request = require("request");
+var axios = require('axios');
 const cheerio = require("cheerio");
 
 const PORT = 1337;
@@ -17,11 +17,11 @@ var npid = require('npid');
 
 
 try {
-    var pid = npid.create('/tmp/AmazonWishListWrapper.pid');
-    pid.removeOnExit();
+  var pid = npid.create('/tmp/AmazonWishListWrapper.pid');
+  pid.removeOnExit();
 } catch (err) {
-    console.log(err);
-    process.exit(1);
+  console.log(err);
+  process.exit(1);
 }
 
 
@@ -30,31 +30,34 @@ app.get("/", (req, res) => {
 });
 
 app.get("/get", function (req, res) {
+
   var options = {
-    uri: req.query.url,
-    method: "GET",
+    method: 'get',
+    url: req.query.url
   };
 
-  request(options, function (error, response, body) {
-    try {
-      if (!error && response.statusCode == 200) {
-        var $ = cheerio.load(body);
+  axios(options)
+    .then(function (response) {
+      try {
+        var $ = cheerio.load(response.data);
         var name_wish_list = $("#profile-list-name").html();
         var number_list = $("#viewItemCount").val();
         var a = cheerio.load($("#g-items").html());
 
+
         var Region_URL = req.query.url.split("/").slice(0, 3).join("/");
         // Prende i titoli degli articoli
-        a("h3 a").each(function (index, element) {
+        a("h2 a").each(function (index, element) {
           title.push($(element).attr("title"));
           url.push(Region_URL + $(element).attr("href"));
         });
 
         // Prende il prezzo degli articoli
         a("li").each(function (index, element) {
-          if ($(element).attr("data-price") != "-Infinity")
+          if ($(element).attr("data-price") != "-Infinity" && $(element).attr("data-price") != undefined) {
             price.push(Number($(element).attr("data-price")));
-          else price.push(0);
+
+          } else price.push(0);
         });
 
         // Prende l'immagine
@@ -67,8 +70,10 @@ app.get("/get", function (req, res) {
         data_store[0]["number_list"] = number_list;
         data_store[0]["total_price"] = eval(price.join("+")).toFixed(2);
 
+
+
         // show date
-        for (var i = 1; i < title.length + 1; i++) {
+        for (var i = 1; i < number_list; i++) {
           data_store[i] = {};
 
           data_store[i]["title"] = title[i - 1];
@@ -82,11 +87,22 @@ app.get("/get", function (req, res) {
         title = [];
         image = [];
         url = [];
+      } catch (error) {
+        var data_store = [];
+        data_store[0] = {};
+        data_store[0]["error"] = "Link Errato";
+        res.send(data_store);
+
+        res.status(404).send(data_store);
       }
-    } catch (error) {
-      res.status(404).send("Link errato");
-    }
-  });
+
+    })
+    .catch(function (error) {
+
+      console.log(error);
+
+    });
+
 });
 
 const server = app.listen(process.env.PORT || PORT, function () {});
